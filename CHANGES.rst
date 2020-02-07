@@ -67,6 +67,7 @@ nasa_exoplanet_archive
 
 noao
 ^^^^
+
 - Module added to access the NOAO archive. [#1638]
 
 
