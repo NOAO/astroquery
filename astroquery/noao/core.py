@@ -1,4 +1,4 @@
-"""\
+"""
 Provide astroquery API access to OIR Lab Astro Data Archive (natica).
 
 This does DB access through web-services. It allows query against ALL

@@ -23,7 +23,7 @@ class TestNoaoClass(object):
         cls.arch = astroquery.noao.Noao
 
     def test_query_region_1(self):
-        """Insure query gets at least the set of files we expect.
+        """Ensure query gets at least the set of files we expect.
         Its ok if more files have been added to the remote Archive."""
 
         c = SkyCoord(ra=10.625*u.degree, dec=41.2*u.degree, frame='icrs')
