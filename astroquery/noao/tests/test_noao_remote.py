@@ -2,7 +2,6 @@
 # Python library
 from __future__ import print_function
 # External packages
-import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import remote_data
