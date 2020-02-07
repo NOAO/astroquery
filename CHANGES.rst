@@ -65,6 +65,11 @@ nasa_exoplanet_archive
   Added two functions ``query_planet`` (to query for a specific exoplanet), and
   ``query_star`` (to query for all exoplanets under a specific stellar system) [#1606]
 
+noao
+^^^^
+- Module added to access the NOAO archive. [#1638]
+
+
 splatalogue
 ^^^^^^^^^^^
 
