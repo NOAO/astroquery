@@ -12,7 +12,7 @@ Service fixes and enhancements
 Infrastructure, Utility and Other Changes and Additions
 -------------------------------------------------------
 
-0.4 (2020-02-07)
+0.4.1 (2020-02-07)
 ================
 
 New Tools and Services
