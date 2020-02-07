@@ -67,5 +67,5 @@ class NoaoClass(astroquery.query.BaseQuery):
         # convert arguments to a valid requests payload
         return dict
 
-    
+
 Noao = NoaoClass()
