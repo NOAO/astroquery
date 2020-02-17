@@ -89,35 +89,97 @@ class NoaoClass(BaseQuery):
             raise Exception(msg)
 
     @class_or_instance
-    def _query_sia(self, coordinate, radius='1', limit=1000):
-        self._validate_version()
+    def _query_sia(self, coordinate, radius=1.0, limit=1000, sort=False):
         ra, dec = coordinate.to_string('decimal').split()
         size = radius
         url = f'{self.url}?POS={ra},{dec}&SIZE={size}&format=json&limit={limit}'
         print(f'DBG: SIA url={url}')
-        response = requests.get(url)
         # #!response = self._request('GET', url)
-        return astropy.table.Table(data=response.json())
+        response = requests.get(url)
+        # Return value from service is not sorted (it takes longer to sort).
+        # But we need to test against known PARTIAL results.
+        # To allow PARTIAL compare, sort here.
+        if sort:
+            header = response.json()[0]
+            body = response.json()[1:]
+            ordered = sorted(body, key=lambda d: d['archive_filename'])
+            #print(f'DBG: SIA ordered = {ordered}')
+            return astropy.table.Table(data=[header]+ordered)
+        else:
+            return astropy.table.Table(data=response.json())
+
+    def service_metadata(self):
+        """Denotes a Metadata Query: no images are requested; only metadata
+    should be returned. This feature is described in more detail in:
+    http://www.ivoa.net/documents/PR/DAL/PR-SIA-1.0-20090521.html#mdquery
+        """
+        url = f'{self.url}?FORMAT=METADATA&format=json'
+        response = requests.get(url)
+        return response.json()[0]
 
     @class_or_instance
-    def query_region(self, coordinate, radius='1', limit=1000):
-        if self.which == 'vohdu':
-            return self._query_sia(coordinate, radius='1', limit=limit)
-        elif self.which == 'voimg':
-            return self._query_sia(coordinate, radius='1', limit=limit)
+    def query_region(self, coordinate, radius=1.0, limit=1000, sort=False):
+        self._validate_version()
 
+        if self.which == 'vohdu':
+            return self._query_sia(coordinate,
+                                   radius=radius, limit=limit, sort=sort)
+        elif self.which == 'voimg':
+            return self._query_sia(coordinate,
+                                   radius=radius, limit=limit, sort=sort)
 
     def _query_ads(self, jdata, limit=1000):
         url = f'{self.url}/'
-        print(f'DBG-0: ADS url={url}')
-        params = dict(limit=limit)
-        print(f'DBG-0: ADS params={params}')
         print(f'DBG-0: ADS jdata={jdata}')
-        response = requests.post(self.url, json=jdata, params=params)
+        # #!params = dict(limit=limit)
+        # #!print(f'DBG-0: ADS params={params}')
+        # #!response = requests.post(self.url, json=jdata, params=params)
+        adsurl = f'{self.url}/?limit={limit}'
+        print(f'DBG-0: adsurl = {adsurl}')
+        response = requests.post(adsurl, json=jdata)
         print(f'DBG-0: ADS response={response}')
         print(f'DBG-0: ADS response.content={response.content}')
+        print(f'DBG-0: ADS response.json()={response.json()}')
         return astropy.table.Table(data=response.json())        
 
+    def core_fields(self):  # @@@ make this property and cache it
+        """List the available CORE fields. CORE fields are faster to search
+than AUX fields.."""
+        if self.which == 'fasearch':
+            url = f'{self.ADS_URL}/core_file_fields/'
+        elif self.which == 'hasearch':
+            url = f'{self.ADS_URL}/core_hdu_fields/'
+        else:
+            return None
+        response = requests.get(url)
+        return response.json()
+
+    def aux_fields(self, instrument, proctype):
+        """List the available AUX fields. AUX fields are ANY fields in the
+Archive FITS files that are not core DB fields.  These are generally
+common to a single Instrument, Proctype combination. AUX fields are
+slower to search than CORE fields. """
+        if self.which == 'fasearch':
+            url = f'{self.ADS_URL}/aux_file_fields/{instrument}/{proctype}/'
+        elif self.which == 'hasearch':
+             url = f'{self.ADS_URL}/aux_hdu_fields/{instrument}/{proctype}/'
+        else:
+            return None
+        response = requests.get(url)
+        return response.json()
+
+    def categoricals(self):
+        """List the currently acceptable values for each 'categorical field'
+        associated with Archive files.  A 'categorical field' is one in
+        which the values are restricted to a specific set.  The specific
+        set may grow over time, but not often. The categorical fields are:
+        collection, instrument, obs_mode, proc_type, prod_type, site, survey,
+        telescope.
+        """
+        url = f'{self.ADS_URL}/cat_lists/?format=json'
+        response = requests.get(url)
+        return response.json()
+    
     @class_or_instance
     def query_metadata(self, qspec, limit=1000):
         self._validate_version()

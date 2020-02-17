@@ -2,6 +2,7 @@
 # Intended for use by: pytest
 # Python library
 from __future__ import print_function
+from pprint import pformat
 # External packages
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -23,16 +24,28 @@ class TestNoaoClass(object):
         """Ensure query gets at least the set of files we expect.
         Its ok if more files have been added to the remote Archive
         since expected.query_region_1 was saved."""
-
+        print(f'DBG: query_region_1')
         arch = NoaoClass(which='voimg')
         c = SkyCoord(ra=10.625*u.degree, dec=41.2*u.degree, frame='icrs')
-        r = arch.query_region(c, radius='0.1',limit=5)
-        actual = set(list(r['md5sum'])[1:])
-        #print(f'DBG: query_region_1; actual={actual}')
+        # Queury cannot use LIMIT; unsorted results unpredictable for tests
+        r = arch.query_region(c, radius=0.1, sort=True) 
+        actual = set(list(r['md5sum'])[1:6])
+        print(f'DBG: query_region_1; actual({len(r)})={actual}')
         expected = exp.query_region_1
-        #print(f'DBG: query_region_1; expected={expected}')
+        print(f'DBG: query_region_1; expected={expected}')
         assert expected.issubset(actual)
 
+    def test_service_metadata(self):
+        """Metadata query per:
+        http://www.ivoa.net/documents/PR/DAL/PR-SIA-1.0-20090521.html#mdquery
+        """
+        arch = NoaoClass(which='voimg')
+        actual = arch.service_metadata()
+        print(f'DBG-test_service_metadata: actual={pformat(actual)}')
+        expected = exp.service_metadata
+        assert actual == expected
+        
+        
     def test_query_metadata_1(self):
         """Ensure query gets at least the set of files we expect.
         Its ok if more files have been added to the remote Archive
@@ -62,7 +75,7 @@ class TestNoaoClass(object):
         }
         
         r = arch.query_metadata(jj, limit=5)
-        print(f'DBG: response={r}')
+        print(f'DBG: response({len(r)})={r}')
         actual = set(list(r['md5sum'])[1:])
 
         print(f'DBG: query_metadata_1; actual={actual}')
@@ -70,3 +83,18 @@ class TestNoaoClass(object):
         print(f'DBG: query_metadata_1; expected={expected}')
         assert expected.issubset(actual)
         
+    def test_core_fields(self):
+        """core_file_fields ok"""
+        arch = NoaoClass(which='fasearch')
+        actual = arch.core_fields()
+        print(f'DBG-test_core_fields: actual={pformat(actual)}')
+        expected = exp.core_fields
+        assert actual == expected
+
+    def test_aux_fields(self):
+        """aux_file_fields ok"""
+        arch = NoaoClass(which='fasearch')
+        actual = arch.aux_fields('decam','raw')
+        print(f'DBG-test_aux_fields: actual={pformat(actual)}')
+        expected = exp.aux_fields
+        assert actual == expected
