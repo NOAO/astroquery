@@ -32,20 +32,11 @@ __all__ = ['Noao', 'NoaoClass']
 
 
 @async_to_sync
-class AdsClass(BaseQuery):
-    NAT_URL = conf.server
-    
-
-
-        
-
-@async_to_sync
 class NoaoClass(BaseQuery):
 
     NAT_URL = conf.server
     SIA_URL = f'{NAT_URL}/api/sia'
     ADS_URL = f'{NAT_URL}/api/adv_search'
-
 
     def __init__(self, which='voimg'):
         """ set some parameters """
@@ -64,7 +55,6 @@ class NoaoClass(BaseQuery):
             self.which = 'voimg'
             self.url = f'{self.SIA_URL}/voimg'
 
-            
     @property
     def api_version(self):
         if self._api_version is None:
@@ -92,7 +82,8 @@ class NoaoClass(BaseQuery):
     def _query_sia(self, coordinate, radius=1.0, limit=1000, sort=False):
         ra, dec = coordinate.to_string('decimal').split()
         size = radius
-        url = f'{self.url}?POS={ra},{dec}&SIZE={size}&format=json&limit={limit}'
+        url = (f'{self.url}?POS={ra},{dec}&SIZE={size}'
+               f'&format=json&limit={limit}')
         print(f'DBG: SIA url={url}')
         # #!response = self._request('GET', url)
         response = requests.get(url)
@@ -103,7 +94,6 @@ class NoaoClass(BaseQuery):
             header = response.json()[0]
             body = response.json()[1:]
             ordered = sorted(body, key=lambda d: d['archive_filename'])
-            #print(f'DBG: SIA ordered = {ordered}')
             return astropy.table.Table(data=[header]+ordered)
         else:
             return astropy.table.Table(data=response.json())
@@ -129,8 +119,8 @@ class NoaoClass(BaseQuery):
                                    radius=radius, limit=limit, sort=sort)
 
     def _query_ads(self, jdata, limit=1000):
-        url = f'{self.url}/'
         print(f'DBG-0: ADS jdata={jdata}')
+        # #!url = f'{self.url}/'
         # #!params = dict(limit=limit)
         # #!print(f'DBG-0: ADS params={params}')
         # #!response = requests.post(self.url, json=jdata, params=params)
@@ -140,7 +130,7 @@ class NoaoClass(BaseQuery):
         print(f'DBG-0: ADS response={response}')
         print(f'DBG-0: ADS response.content={response.content}')
         print(f'DBG-0: ADS response.json()={response.json()}')
-        return astropy.table.Table(data=response.json())        
+        return astropy.table.Table(data=response.json())
 
     def core_fields(self):  # @@@ make this property and cache it
         """List the available CORE fields. CORE fields are faster to search
@@ -162,7 +152,7 @@ slower to search than CORE fields. """
         if self.which == 'fasearch':
             url = f'{self.ADS_URL}/aux_file_fields/{instrument}/{proctype}/'
         elif self.which == 'hasearch':
-             url = f'{self.ADS_URL}/aux_hdu_fields/{instrument}/{proctype}/'
+            url = f'{self.ADS_URL}/aux_hdu_fields/{instrument}/{proctype}/'
         else:
             return None
         response = requests.get(url)
@@ -179,22 +169,21 @@ slower to search than CORE fields. """
         url = f'{self.ADS_URL}/cat_lists/?format=json'
         response = requests.get(url)
         return response.json()
-    
+
     @class_or_instance
     def query_metadata(self, qspec, limit=1000):
         self._validate_version()
 
         if qspec is None:
-            jdata = {"outfields" : ["md5sum",], "search" : [ ]}
+            jdata = {"outfields": ["md5sum", ], "search": []}
         else:
             jdata = qspec
 
-        if self.which == 'hasearch':        
+        if self.which == 'hasearch':
             return self._query_ads(jdata, limit=limit)
-        elif self.which == 'fasearch':        
+        elif self.which == 'fasearch':
             return self._query_ads(jdata, limit=limit)
 
-        
     def _args_to_payload(self, *args):
         # convert arguments to a valid requests payload
         return dict

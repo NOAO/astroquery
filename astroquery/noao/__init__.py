@@ -73,6 +73,7 @@ class Conf(_config.ConfigNamespace):
 
 conf = Conf()
 
+# Do not move following despite flake8 E402 complaint
 from .core import Noao, NoaoClass
 
 

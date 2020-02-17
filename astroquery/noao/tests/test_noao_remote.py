@@ -28,7 +28,7 @@ class TestNoaoClass(object):
         arch = NoaoClass(which='voimg')
         c = SkyCoord(ra=10.625*u.degree, dec=41.2*u.degree, frame='icrs')
         # Queury cannot use LIMIT; unsorted results unpredictable for tests
-        r = arch.query_region(c, radius=0.1, sort=True) 
+        r = arch.query_region(c, radius=0.1, sort=True)
         actual = set(list(r['md5sum'])[1:6])
         print(f'DBG: query_region_1; actual({len(r)})={actual}')
         expected = exp.query_region_1
@@ -44,8 +44,7 @@ class TestNoaoClass(object):
         print(f'DBG-test_service_metadata: actual={pformat(actual)}')
         expected = exp.service_metadata
         assert actual == expected
-        
-        
+
     def test_query_metadata_1(self):
         """Ensure query gets at least the set of files we expect.
         Its ok if more files have been added to the remote Archive
@@ -53,9 +52,9 @@ class TestNoaoClass(object):
 
         arch = NoaoClass(which='fasearch')
         jj = {
-            "outfields" : [
+            "outfields": [
                 "md5sum",
-                "ra_min", 
+                "ra_min",
                 "archive_filename",
                 "instrument",
                 "proc_type",
@@ -66,14 +65,13 @@ class TestNoaoClass(object):
                 "EXPNUM",    # AUX field. Slows search
                 "AIRMASS",
             ],
-            "search" : [
+            "search": [
                 ["instrument", "decam"],
                 ["proc_type", "raw"],
-                ["ra_min",322,324],
+                ["ra_min", 322, 324],
                 ["EXPNUM", 667000, 669000],
             ]
         }
-        
         r = arch.query_metadata(jj, limit=5)
         print(f'DBG: response({len(r)})={r}')
         actual = set(list(r['md5sum'])[1:])
@@ -82,7 +80,7 @@ class TestNoaoClass(object):
         expected = exp.query_metadata_1
         print(f'DBG: query_metadata_1; expected={expected}')
         assert expected.issubset(actual)
-        
+
     def test_core_fields(self):
         """core_file_fields ok"""
         arch = NoaoClass(which='fasearch')
@@ -94,7 +92,7 @@ class TestNoaoClass(object):
     def test_aux_fields(self):
         """aux_file_fields ok"""
         arch = NoaoClass(which='fasearch')
-        actual = arch.aux_fields('decam','raw')
+        actual = arch.aux_fields('decam', 'raw')
         print(f'DBG-test_aux_fields: actual={pformat(actual)}')
         expected = exp.aux_fields
         assert actual == expected
