@@ -62,14 +62,14 @@ class TestNoaoClass(object):
                 "release_date",
                 "proposal",
                 "caldat",
-                "EXPNUM",    # AUX field. Slows search
-                "AIRMASS",
+                "EXPNUM",
+                "AIRMASS"
             ],
             "search": [
                 ["instrument", "decam"],
                 ["proc_type", "raw"],
                 ["ra_min", 322, 324],
-                ["EXPNUM", 667000, 669000],
+                ["EXPNUM", 667000, 669000]
             ]
         }
         r = arch.query_metadata(jj, limit=5)
